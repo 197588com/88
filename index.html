@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第二世界 | 灵魂ID绑定</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Noto+Sans+SC:wght@300;400&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: #000000;
+        }
+        .orbitron {
+            font-family: 'Orbitron', sans-serif;
+        }
+        .glass-effect {
+            background: rgba(16, 16, 16, 0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .neon-text {
+            text-shadow: 0 0 5px #0ea5e9, 0 0 10px #0ea5e9, 0 0 20px #0ea5e9, 0 0 40px #0ea5e9;
+        }
+        .neon-border {
+            box-shadow: 0 0 5px rgba(14, 165, 233, 0.8), 0 0 10px rgba(14, 165, 233, 0.6), inset 0 0 5px rgba(14, 165, 233, 0.8), inset 0 0 10px rgba(14, 165, 233, 0.6);
+        }
+        .btn-pulse {
+            animation: pulse-light 2s infinite;
+        }
+        @keyframes pulse-light {
+            0% { box-shadow: 0 0 8px #0ea5e9, inset 0 0 8px #0ea5e9; }
+            50% { box-shadow: 0 0 16px #0ea5e9, inset 0 0 14px #0ea5e9; }
+            100% { box-shadow: 0 0 8px #0ea5e9, inset 0 0 8px #0ea5e9; }
+        }
+        #background-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+        .story-container {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 1s ease-in-out, opacity 1s ease-in-out;
+            opacity: 0;
+        }
+        .story-container.show {
+            max-height: 1000px; /* A large enough value */
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="bg-black text-gray-200 flex items-center justify-center min-h-screen p-4">
+    <div id="background-animation"></div>
+
+    <div id="login-container" class="w-full max-w-md mx-auto glass-effect rounded-2xl p-8 transition-all duration-500">
+        <div class="text-center mb-8">
+            <h1 class="orbitron text-3xl font-bold text-sky-400 neon-text">SECOND WORLD</h1>
+            <p class="text-gray-400 mt-2">第二世界 | 灵魂ID绑定</p>
+        </div>
+
+        <div id="form-section">
+            <div class="mb-6">
+                <label for="playerName" class="block text-sky-300 mb-2">输入您的代号</label>
+                <input type="text" id="playerName" class="w-full bg-gray-900/50 border border-sky-700/50 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all" placeholder="例如：GM001">
+            </div>
+            <button id="bindButton" class="w-full orbitron bg-sky-500/80 text-white font-bold py-3 rounded-lg neon-border btn-pulse hover:bg-sky-400 transition-all duration-300">
+                链接灵魂
+            </button>
+        </div>
+
+        <div id="loading-section" class="hidden text-center">
+            <div class="w-16 h-16 border-4 border-dashed border-sky-400 rounded-full animate-spin mx-auto"></div>
+            <p id="loading-text" class="mt-4 text-sky-300 text-lg"></p>
+        </div>
+
+        <div id="result-section" class="hidden text-center">
+            <h2 id="welcome-title" class="orbitron text-2xl font-bold text-green-400"></h2>
+            <p id="welcome-message" class="mt-4 text-gray-300 leading-relaxed"></p>
+            
+            <!-- Gemini API Feature Button -->
+            <button id="generateStoryButton" class="mt-6 w-full orbitron bg-amber-500/80 text-white font-bold py-3 rounded-lg neon-border btn-pulse hover:bg-amber-400 transition-all duration-300">
+                ✨ 生成专属角色故事
+            </button>
+
+            <!-- Story Display Area -->
+            <div id="story-container" class="story-container mt-6 text-left p-4 bg-black/30 rounded-lg border border-sky-900/50">
+                <p id="story-content" class="text-gray-300 whitespace-pre-wrap"></p>
+            </div>
+
+            <button id="enter-game-button" class="mt-8 w-full orbitron bg-gray-700 text-gray-400 font-bold py-3 rounded-lg cursor-not-allowed">
+                进入游戏 (即将开放)
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // 模拟背景动画
+        const bgAnimation = document.getElementById('background-animation');
+        for (let i = 0; i < 50; i++) {
+            const star = document.createElement('div');
+            star.style.position = 'absolute';
+            star.style.width = `${Math.random() * 2}px`;
+            star.style.height = star.style.width;
+            star.style.backgroundColor = 'rgba(14, 165, 233, 0.8)';
+            star.style.borderRadius = '50%';
+            star.style.top = `${Math.random() * 100}%`;
+            star.style.left = `${Math.random() * 100}%`;
+            star.style.animation = `twinkle ${Math.random() * 5 + 3}s infinite alternate`;
+            bgAnimation.appendChild(star);
+        }
+        const keyframes = `
+        @keyframes twinkle {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }`;
+        const styleSheet = document.createElement("style");
+        styleSheet.innerText = keyframes;
+        document.head.appendChild(styleSheet);
+
+
+        // 主要逻辑
+        const bindButton = document.getElementById('bindButton');
+        const playerNameInput = document.getElementById('playerName');
+        
+        const formSection = document.getElementById('form-section');
+        const loadingSection = document.getElementById('loading-section');
+        const resultSection = document.getElementById('result-section');
+
+        const loadingText = document.getElementById('loading-text');
+        const welcomeTitle = document.getElementById('welcome-title');
+        const welcomeMessage = document.getElementById('welcome-message');
+
+        const generateStoryButton = document.getElementById('generateStoryButton');
+        const storyContainer = document.getElementById('story-container');
+        const storyContent = document.getElementById('story-content');
+        
+        let boundPlayerName = '';
+
+        bindButton.addEventListener('click', () => {
+            const playerName = playerNameInput.value.trim();
+            if (playerName === '') {
+                // In a real app, use a styled modal instead of alert.
+                const modal = document.createElement('div');
+                modal.className = 'fixed inset-0 bg-black/50 flex items-center justify-center';
+                modal.innerHTML = `<div class="bg-gray-800 border border-red-500 rounded-lg p-6 text-center"><p class="text-white">请输入您的代号。</p><button onclick="this.parentElement.parentElement.remove()" class="mt-4 bg-red-500 text-white px-4 py-2 rounded">好的</button></div>`;
+                document.body.appendChild(modal);
+                return;
+            }
+            boundPlayerName = playerName;
+
+            formSection.classList.add('hidden');
+            loadingSection.classList.remove('hidden');
+
+            const steps = [
+                { text: "正在连接创世引擎'太一'...", duration: 2000 },
+                { text: "正在验证身份权限...", duration: 1500 },
+                { text: "正在生成生物量子签名...", duration: 2500 },
+                { text: "正在建立灵魂纠缠链接...", duration: 3000 },
+                { text: "链接成功！正在载入世界...", duration: 1500 }
+            ];
+
+            let currentStep = 0;
+            function runStep() {
+                if (currentStep < steps.length) {
+                    loadingText.textContent = steps[currentStep].text;
+                    setTimeout(runStep, steps[currentStep].duration);
+                    currentStep++;
+                } else {
+                    loadingSection.classList.add('hidden');
+                    resultSection.classList.remove('hidden');
+                    welcomeTitle.textContent = `欢迎, 第一序列玩家 ${playerName}`;
+                    welcomeMessage.innerHTML = `您的灵魂ID <span class="text-sky-400 orbitron">#001</span> 已成功绑定至创世引擎'太一'。<br>您已获得'第二世界'阿尔法测试资格。<br><br><span class="text-amber-400">请注意：当前世界仍处于创世雏形阶段，物理法则尚不稳定，请谨慎探索。</span>`;
+                }
+            }
+            runStep();
+        });
+
+        // Gemini API Call Logic
+        generateStoryButton.addEventListener('click', async () => {
+            generateStoryButton.disabled = true;
+            generateStoryButton.textContent = '正在从因果之海中检索您的命运...';
+            storyContainer.classList.remove('show');
+
+            const prompt = `你是一位史诗奇幻世界的首席叙事官。请为一个代号为 '${boundPlayerName}' 的玩家，在名为'第二世界'的创世雏形世界中，生成一段神秘而又宏大的专属角色背景故事。这个世界刚刚诞生，物理法则尚不稳定。故事要充满悬念和宿命感，暗示这位玩家的到来并非偶然。语言风格要简洁、神秘、充满史诗感。`;
+            
+            try {
+                let chatHistory = [];
+                chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+                const payload = { contents: chatHistory };
+                const apiKey = "" 
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`API request failed with status ${response.status}`);
+                }
+
+                const result = await response.json();
+                
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    const text = result.candidates[0].content.parts[0].text;
+                    storyContent.textContent = text;
+                } else {
+                    storyContent.textContent = '命运的丝线发生了意想不到的紊乱，无法窥探您的过去。请稍后再试。';
+                }
+
+            } catch (error) {
+                console.error('Error fetching story:', error);
+                storyContent.textContent = '错误：无法连接到创世引擎的叙事核心。请检查您的网络或稍后再试。';
+            } finally {
+                storyContainer.classList.add('show');
+                generateStoryButton.disabled = false;
+                generateStoryButton.textContent = '✨ 再次探寻命运';
+            }
+        });
+    </script>
+</body>
+</html>
